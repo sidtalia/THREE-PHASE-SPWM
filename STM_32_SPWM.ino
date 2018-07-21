@@ -1,17 +1,17 @@
 int channel_1_start, channel_1,last_channel_1=0;
 long loop_timer;
 
-#define AP TIMER4_BASE->CCR1
-#define AN TIMER4_BASE->CCR2
-#define BP TIMER4_BASE->CCR3
+#define AP TIMER4_BASE->CCR1 //positive A phase
+#define AN TIMER4_BASE->CCR2 //negative A phase 
+#define BP TIMER4_BASE->CCR3 // and so on
 #define BN TIMER4_BASE->CCR4
 #define CP TIMER1_BASE->CCR1
 #define CN TIMER1_BASE->CCR4
 
-#define SCALER float(0.1)
+#define SCALER float(0.1) //constant
 #define MULTI_CONST float(2*PI*0.000001)
-#define TRIANGLE_TIME 333
-#define CPU_clock 127
+#define TRIANGLE_TIME 333 //triangle wave time period
+#define CPU_clock 127 //stm cpu clock speed in mhz
 
 void setup() {
   Serial.begin(57600); //this is for debugging purposes.
@@ -23,7 +23,7 @@ void setup() {
   pinMode(PB9, PWM); //BN
   pinMode(PA8, PWM); //CP
   pinMode(PA11, PWM);//CN
-  
+  //-------------------------------standard code for enabling the timers on certain pins-------------------
   TIMER4_BASE->CR1 = TIMER_CR1_CEN | TIMER_CR1_ARPE;
   TIMER4_BASE->CR2 = 0;
   TIMER4_BASE->SMCR = 0;
@@ -53,7 +53,9 @@ void setup() {
   TIMER1_BASE->DCR = 0;
   CP = 0;
   CN = 0;
-
+//--------------------------------------timer setup done-----------------------------------
+//-------------------------------enabling interrupts to read a potentiometer for manual control of the frequency------------------
+  //rotating the potnetiometer should change the frequency of the sine wave.
   Timer2.attachCompare1Interrupt(handler_channel_1);
   TIMER2_BASE->CR1 = TIMER_CR1_CEN;
   TIMER2_BASE->CR2 = 0;
@@ -66,7 +68,7 @@ void setup() {
   TIMER2_BASE->PSC = CPU_clock;
   TIMER2_BASE->ARR = 0xFFFF;
   TIMER2_BASE->DCR = 0;
-
+//-----------------------------------interrupt setup done-----------------------------------
   delay(250);
 }
 
@@ -133,6 +135,7 @@ void loop() {
   while(loop_timer > micros()); //wait for duty cycle to be over 
 }
 
+//this stuff reads pwm using interrupts on pin PA0 of stm32f103c8t6
 void handler_channel_1(void) //connect pwm generator to pin PA0
 {
   if (0b1 & GPIOA_BASE->IDR) 
